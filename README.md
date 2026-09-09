@@ -96,6 +96,17 @@ Each supports `-?` for help.  Set `CHECKPOINT_STORAGE_ROOT` to control where the
 
 Nothing in that file is hypothetical, and speculative entries do not belong in it.
 
+## Where this lives
+
+Development happens on a self-hosted Forgejo instance, and GitHub is an automatic push mirror.  GitHub is the canonical public home: it is where the plugin is installed from, and where most people will find it.
+
+Issues are open on both.  Use whichever you already have an account for.
+
+- GitHub: https://github.com/HannahVernon/agent-session-checkpoints
+- Forgejo: https://code.hannahvernon.com/hannah-vernon/agent-session-checkpoints
+
+Pull requests are easiest on GitHub.  Branch protection lives on the Forgejo side, so the GitHub mirror carries no rulesets; a ruleset requiring pull requests there would reject the mirror's own pushes.
+
 ## Contributing
 
 Issues and pull requests are welcome, particularly a failure mode you have observed with a real example behind it.
