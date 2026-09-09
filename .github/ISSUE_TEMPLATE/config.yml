@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: Read the skill first
-    url: https://code.hannahvernon.com/hannah-vernon/agent-session-checkpoints/src/branch/main/README.md
+    url: https://github.com/HannahVernon/agent-session-checkpoints#readme
     about: The README and the reference documents answer most questions about the convention.
   - name: Report a security problem privately
-    url: https://code.hannahvernon.com/hannah-vernon/agent-session-checkpoints/src/branch/main/SECURITY.md
+    url: https://github.com/HannahVernon/agent-session-checkpoints/blob/main/SECURITY.md
     about: Do not open a public issue for a security problem.  Mail vuln@mvct.com.
