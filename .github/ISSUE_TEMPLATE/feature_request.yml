@@ -1,0 +1,47 @@
+name: Feature request
+description: Suggest a change to the convention, a document, or a helper script.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A failure mode you have observed in practice is the most welcome contribution here.  Use the "Observed example" field for it.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the situation, not the solution.  What went wrong, or what could not be done?
+      placeholder: My checkpoint store is one folder per client rather than per repository, and Find-OpenWork assumes one level.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Observed example
+      description: If you are proposing a new entry for references/anti-patterns.md, describe a case you actually saw, with identifying details removed.  Speculative entries are not accepted there.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part does this affect?
+      multiple: true
+      options:
+        - SKILL.md
+        - Reference documents
+        - Helper scripts
+        - The convention itself
+        - Repository tooling
+    validations:
+      required: true

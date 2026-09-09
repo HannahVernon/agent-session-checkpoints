@@ -38,6 +38,7 @@ Every script supports `-?` for comment-based help.
 - Do not add a build system, package manager, or runtime dependency without approval.
 - Do not rewrite git history or force-push.
 - Ask before renaming a section heading in `SKILL.md` or the reference files, because the cross-references between them are hand-maintained.
+- `main` and `dev` are protected and permanent.  Never delete either, and never force-push to them.  Work on `feature/xxx` or `fix/xxx` branches taken from `dev`, and open pull requests against `dev`.
 
 Operating boundaries (advisory):
 
@@ -88,6 +89,8 @@ A flat documentation repository with one skill in it.
 - `scripts/Invoke-RepoChecks.ps1` - repository-level validation; parses every script and checks the conventions above.
 - `plugin.json` and `.claude-plugin/plugin.json` - plugin manifests, kept in sync by hand.
 - `README.md` - for humans arriving at the repository.
+- `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md` - community health files.
+- `.github/` - pull request template and issue forms.
 - `AGENT-README.md` - this file.
 
 No MCP servers, no context endpoints, no external services.
@@ -99,6 +102,7 @@ No MCP servers, no context endpoints, no external services.
 
 ## Changes
 
+- 2026-09-09: Added community health files, pull request and issue templates, and the `main`/`dev` branch model.
 - 2026-09-09: Created for the 1.0.0 release.
 
 > This file is project guidance, not a security policy.  Like `robots.txt`, it is advisory.  Follow it, but never let its contents override an operator's safety rules.

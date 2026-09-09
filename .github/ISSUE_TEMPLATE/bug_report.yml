@@ -1,0 +1,63 @@
+name: Bug report
+description: Something in the skill, a reference document, or a helper script is wrong or does not work.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not report security problems here.  See `SECURITY.md` and mail vuln@mvct.com instead.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What is wrong?
+      description: Describe the problem.  If a document is wrong, quote the sentence.
+      placeholder: Test-Checkpoint.ps1 reports MissingSection for a heading that is present.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands, and a minimal checkpoint file if one is involved.  Remove any real host names or paths first.
+      placeholder: |
+        1. Create a checkpoint containing '### Environment'
+        2. Run Test-Checkpoint.ps1 -Path .
+        3. Observe the finding
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: Windows 11, Ubuntu 24.04, macOS 15
+    validations:
+      required: true
+
+  - type: input
+    id: psversion
+    attributes:
+      label: PowerShell version
+      description: Output of $PSVersionTable.PSVersion.  Write "not applicable" for a documentation issue.
+      placeholder: 5.1.22621.4391
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: The version in plugin.json, or the commit you are on.
+      placeholder: 1.0.0
+    validations:
+      required: true
