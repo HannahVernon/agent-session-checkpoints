@@ -2,7 +2,7 @@
 Agent-Readme: 0.1
 Name: agent-session-checkpoints
 Description: A skill package that teaches an agent to write and restore session checkpoints.
-Version: 1.0.0
+Version: 1.0.1
 Updated: 2026-09-09
 Tags: checkpoint, session-state, handoff, continuity, workflow
 Languages: markdown, powershell
@@ -67,9 +67,9 @@ Preferences (negotiable):
 
 ## Current state
 
-Version 1.0.0, first release.  The skill is complete and self-consistent.
+Version 1.0.1.  The skill is complete and self-consistent.
 
-The convention it documents is stable in practice, having been used across dozens of projects, but the packaging is new and the helper scripts have less mileage than the written rules.  Treat the documents as settled and the scripts as the part most likely to need fixing.
+The convention it documents is stable in practice, having been used across dozens of projects, but the packaging is new and the helper scripts have less mileage than the written rules.  Treat the documents as settled and the scripts as the part most likely to need fixing.  The first real use of `Test-Checkpoint.ps1` against genuine checkpoints, rather than its own fixtures, produced two findings within minutes, so pointing the tooling at real files is worth doing before trusting it.
 
 `references/anti-patterns.md` is derived from auditing a large body of real checkpoints.  The failure modes in it are observed, not hypothesised.  Do not add a speculative entry to that file; if a new failure mode is worth recording, it needs a real example behind it.
 
@@ -109,6 +109,7 @@ No MCP servers, no context endpoints, no external services.
 
 ## Changes
 
+- 2026-09-09: 1.0.1.  Fixed an EmptySection false positive, graded DuplicateSession by whether the files share a date, and changed the file-per-session rule to file-per-day.
 - 2026-09-09: Recorded the mirror token's permission constraint for GitHub Actions workflows.
 - 2026-09-09: Made GitHub the canonical public URL; recorded the mirror arrangement.
 - 2026-09-09: Recorded the administrator merge override under Surprises.

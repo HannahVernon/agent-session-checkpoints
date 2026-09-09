@@ -11,7 +11,7 @@
       "displayName": "Session Checkpoints",
       "source": ".",
       "description": "Write and restore session checkpoints so work survives the end of a coding session. Covers what a checkpoint must contain, how to restore one at the start of the next session, how to log changes that git diff cannot see, and the failure modes that make a checkpoint useless when you come back to it.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Hannah Vernon"
       },

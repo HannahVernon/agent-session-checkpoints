@@ -17,6 +17,9 @@
 
     DuplicateSession is only meaningful when the surrounding folder is
     available, so it is skipped when a single file is checked outside a store.
+    It reports High when the files share a date, which is a session that should
+    have updated one file, and Low when they span several days, which is normal
+    for a session resumed over time.
 
 .PARAMETER Path
     A checkpoint file, or a folder of them.  Defaults to the current location.
@@ -184,8 +187,28 @@ foreach ($file in $targets)
         {
             $others = @($sessionIndex[$sid] | Where-Object { $_ -ne $file.FullName } | ForEach-Object { Split-Path -Leaf $_ })
 
-            Add-Finding -File $short -Check 'DuplicateSession' -Severity 'High' `
-                -Detail "Session id also appears in: $($others -join ', ').  Either the id was copied forward from a restored checkpoint, or one session wrote several files."
+            <#
+                A session resumed over several days legitimately writes one file
+                per day, so files days apart are expected rather than wrong.
+                Files from the same day are the real violation, and are also the
+                signature of an identifier copied forward from a restored
+                checkpoint.  Reporting both at the same severity trains people
+                to ignore the check.
+            #>
+            $dates = @(@($sessionIndex[$sid]) | ForEach-Object {
+                if ((Split-Path -Leaf $_) -match 'checkpoint-(\d{4}-\d{2}-\d{2})') { $Matches[1] }
+            } | Sort-Object -Unique)
+
+            if ($dates.Count -le 1)
+            {
+                Add-Finding -File $short -Check 'DuplicateSession' -Severity 'High' `
+                    -Detail "Session id also appears in: $($others -join ', ').  Same day, so one session wrote several files where it should have updated one."
+            }
+            else
+            {
+                Add-Finding -File $short -Check 'DuplicateSession' -Severity 'Low' `
+                    -Detail "Session id spans $($dates.Count) days ($($dates[0]) to $($dates[-1])), across: $($others -join ', ').  Expected for a session resumed over several days.  Confirm the identifier was read from the running session rather than copied forward from a restored checkpoint."
+            }
         }
     }
     else
@@ -196,22 +219,31 @@ foreach ($file in $targets)
 
     foreach ($section in $RequiredSection)
     {
-        $pattern = '(?im)^#{2,3}\s*' + [regex]::Escape($section)
+        $headingPattern = '(?im)^(?<hashes>#{2,3})[ \t]*' + [regex]::Escape($section) + '[^\r\n]*'
+        $heading        = [regex]::Match($text, $headingPattern)
 
-        if ($text -notmatch $pattern)
+        if (-not $heading.Success)
         {
             Add-Finding -File $short -Check 'MissingSection' -Severity 'Medium' `
                 -Detail "No '$section' heading."
-        }
-        else
-        {
-            $body = [regex]::Match($text, $pattern + '(?<body>[\s\S]*?)(?=\r?\n#{2,3}\s|\z)')
 
-            if ($body.Success -and [string]::IsNullOrWhiteSpace($body.Groups['body'].Value))
-            {
-                Add-Finding -File $short -Check 'EmptySection' -Severity 'Low' `
-                    -Detail "'$section' has a heading but no content.  Write 'None' rather than leaving it blank."
-            }
+            continue
+        }
+
+        <#
+            Capture until the next heading of the SAME OR HIGHER level.  Stopping
+            at a heading of any level reports a section as empty when its content
+            begins with a subheading, which is well formed.
+        #>
+        $level = $heading.Groups['hashes'].Value.Length
+        $rest  = $text.Substring($heading.Index + $heading.Length)
+        $stop  = [regex]::Match($rest, '(?m)^#{1,' + $level + '}(?!#)[ \t]')
+        $body  = if ($stop.Success) { $rest.Substring(0, $stop.Index) } else { $rest }
+
+        if ([string]::IsNullOrWhiteSpace($body))
+        {
+            Add-Finding -File $short -Check 'EmptySection' -Severity 'Low' `
+                -Detail "'$section' has a heading but no content.  Write 'None' rather than leaving it blank."
         }
     }
 
