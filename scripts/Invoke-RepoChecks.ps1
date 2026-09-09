@@ -165,6 +165,37 @@ if ((Test-Path -LiteralPath $rootManifest) -and (Test-Path -LiteralPath $claudeM
             Add-Finding -Check 'Manifests' -File 'plugin.json' -Detail "Field '$field' differs between the two manifests."
         }
     }
+
+    $marketplaces = @(
+        @{ File = '.github/plugin/marketplace.json'; Path = (Join-Path $Path '.github/plugin/marketplace.json') },
+        @{ File = '.claude-plugin/marketplace.json'; Path = (Join-Path $Path '.claude-plugin/marketplace.json') }
+    )
+
+    foreach ($market in $marketplaces)
+    {
+        if (-not (Test-Path -LiteralPath $market.Path))
+        {
+            Add-Finding -Check 'Manifests' -File $market.File -Detail 'Marketplace manifest is missing.'
+            continue
+        }
+
+        $marketJson = Get-Content -LiteralPath $market.Path -Raw | ConvertFrom-Json
+        $entry      = @($marketJson.plugins | Where-Object { $_.name -eq $rootJson.name })
+
+        if ($entry.Count -eq 0)
+        {
+            Add-Finding -Check 'Manifests' -File $market.File -Detail "No entry for plugin '$($rootJson.name)'."
+            continue
+        }
+
+        foreach ($field in @('version', 'description'))
+        {
+            if ($entry[0].$field -ne $rootJson.$field)
+            {
+                Add-Finding -Check 'Manifests' -File $market.File -Detail "Field '$field' does not match plugin.json.  Update both when releasing."
+            }
+        }
+    }
 }
 else
 {
