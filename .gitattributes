@@ -1,0 +1,29 @@
+# Normalize all text files in the repo.  Git stores LF internally and applies
+# the per-path eol rules below on checkout.
+* text=auto
+
+# --- Windows tooling: force CRLF ---
+*.ps1       text eol=crlf
+*.psm1      text eol=crlf
+*.psd1      text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# --- Unix shell: force LF ---
+*.sh        text eol=lf
+*.bash      text eol=lf
+
+# --- Cross-platform text: let Git normalize to LF in the repo ---
+*.md        text
+*.json      text
+*.yml       text
+*.yaml      text
+*.txt       text
+
+# --- Binary files: never touch ---
+*.png       binary
+*.jpg       binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.zip       binary
