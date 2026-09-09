@@ -79,6 +79,7 @@ The convention it documents is stable in practice, having been used across dozen
 - **Checkpoints are stored outside the project repository, on purpose.**  Keeping them inside means losing them when a branch is deleted, and committing working notes into project history.
 - **The storage folder is named after the project, never after the session.**  A session identifier is unknowable before the session exists, so a folder named for one cannot be found by the session that needs it.  This is the single most common way to implement checkpointing so that it never works.
 - **The GitHub repository carries no branch protection, and that is deliberate.**  It is a push mirror of a self-hosted Forgejo instance, and a ruleset requiring pull requests would reject the mirror's own pushes.  Protection lives on the Forgejo side, where the work happens.
+- **Adding a GitHub Actions workflow will break the mirror until its token is updated.**  The mirror authenticates with a fine-grained token holding only `Contents: Read and write`, which is all a push needs.  GitHub separately rejects any push that adds or modifies a file under `.github/workflows/`, unless the token also holds `Workflows: Read and write`.  There are no workflows here today, so the narrower token is correct; the constraint only matters if one is added.  Note also that the token has an expiry, and sync stops working when it lapses rather than warning first.
 - The `Changes` section below is part of the AGENT-README convention, not a changelog for the skill.  It records edits to this file.
 - **`main` and `dev` require an approving review, and the owner is the only maintainer.**  Forgejo does not permit approving your own pull request, so the web interface offers a repository administrator an explicit override ("As an administrator, you may still merge this pull request").  The REST merge endpoint refuses with "Does not have enough approvals" unless `force_merge` is passed.  The protection rule is deliberately left strict rather than lowering the approval count, because the override exists.
 
@@ -108,6 +109,7 @@ No MCP servers, no context endpoints, no external services.
 
 ## Changes
 
+- 2026-09-09: Recorded the mirror token's permission constraint for GitHub Actions workflows.
 - 2026-09-09: Made GitHub the canonical public URL; recorded the mirror arrangement.
 - 2026-09-09: Recorded the administrator merge override under Surprises.
 - 2026-09-09: Added marketplace manifests for Copilot CLI and Claude Code, and install instructions.
