@@ -23,7 +23,38 @@ skills/session-checkpoints/
 
 ## Installing
 
-Clone the repository into your agent's plugin directory, or point your plugin loader at it.  The layout follows the common plugin convention: a `plugin.json` at the root and skills under `skills/`.
+### As a plugin
+
+```
+/plugin install HannahVernon/agent-session-checkpoints
+```
+
+Or add the marketplace first, then browse and install:
+
+```
+/plugin marketplace add HannahVernon/agent-session-checkpoints
+/plugin marketplace browse hannahvernon
+/plugin install agent-session-checkpoints@hannahvernon
+```
+
+### As a skill directory
+
+Skills are loaded from several locations, so you can also use the skill without installing a plugin:
+
+- Project: `.github/skills/`, `.agents/skills/`, or `.claude/skills/`
+- Personal: `~/.copilot/skills/` or `~/.agents/skills/`
+- Custom: any directory registered with `/skills add`
+
+To run it directly from a clone, which is the best option if you intend to modify it:
+
+```
+/skills add /path/to/agent-session-checkpoints/skills
+/skills reload
+```
+
+Point at the `skills` directory, not at `skills/session-checkpoints`.  Nothing is copied, so edits to `SKILL.md` take effect on the next `/skills reload`.
+
+To install it as a personal skill instead, copy `skills/session-checkpoints/` into `~/.copilot/skills/`.
 
 The skill activates on phrases such as "save a checkpoint", "write up where we are", and "pick up where we left off", and on starting work in a project that may have a prior checkpoint.
 
