@@ -20,7 +20,7 @@ They are ordered by cost, starting with the ones that make a checkpoint useless 
 
 **Why it matters.**  The field stops identifying anything.  One identifier ends up spread across files written weeks apart, so it is no longer possible to tell which work happened in which session, whether two files are supplements or successors, or how much was done in a sitting.  It is a quiet corruption, because every individual file looks well formed.
 
-**How you notice.**  The same identifier in checkpoints whose timestamps are days or weeks apart.  A body that refers to "previous sessions" in the past tense while claiming a single session identifier is conclusive.
+**How you notice.**  The same identifier in checkpoints whose timestamps are days or weeks apart, **combined with** body text that refers to earlier work in the past tense as though it belonged to another session.  The identifier alone is not enough: a long-lived session resumed over several days shares an identifier across files quite legitimately.  What gives the copying away is a file describing "previous sessions" while claiming to be one of them.
 
 **Instead.**  Read the identifier from the current session, every time.  If it is genuinely unavailable, write `unknown` rather than an inherited value.  An empty field is honest; a wrong one is not.
 
@@ -34,13 +34,15 @@ They are ordered by cost, starting with the ones that make a checkpoint useless 
 
 **Instead.**  Generate the filename from the clock, not by hand, and make the heading match.  If a session runs past midnight, keep the original filename and note the actual times in the body.
 
-## 4. A second file for the same session
+## 4. A second file for the same day
 
-**The failure.**  More work happens, so a second checkpoint file gets created rather than the existing one being updated.
+**The failure.**  More work happens in the same sitting, so a second checkpoint file gets created rather than the existing one being updated.
 
 **Why it matters.**  Restore reads the most recent file only.  Anything recorded in the earlier one, including out-of-repo changes and blocked items, is not read.
 
-**Instead.**  One file per session.  Update it in place.  Start a new file only for a new session.
+**Instead.**  One file per working day.  Update it in place as the day goes on.
+
+**Not to be confused with** the legitimate case: a long-lived session resumed across several days writes one file per day, and the same session identifier appears in each.  That is expected and correct.  The problem is two files covering the same day, not two files sharing an identifier.
 
 ## 5. Two naming conventions in one folder
 

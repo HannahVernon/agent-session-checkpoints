@@ -43,15 +43,17 @@ If the working directory is not in a repository, use a short descriptive name fo
 
 `scripts/Resolve-CheckpointPath.ps1` performs this resolution if PowerShell is available.  It is not required; the rule is simple enough to apply by hand.
 
-## One file per session
+## One file per session, one file per day
 
-Within a single session, **reuse the same file**.  Update it, append to it, rewrite sections of it.  Do not create a second file because more work happened.
+Within a working session, **reuse the same file**.  Update it, append to it, rewrite sections of it.  Do not create a second file because more work happened.
 
-Start a **new** file at the start of a **new** session, named:
+Start a **new** file when you return to the work on a later day, named:
 
 ```
 checkpoint-YYYY-MM-DDTHHMM.md
 ```
+
+Agent sessions are often long lived.  A single session can be resumed across days or weeks, so "one file per session" and "one file per day" diverge, and the day is the more useful unit.  A file covering three weeks of work is not resumable state, it is a diary.  Keep the session identifier accurate in each file, and expect the same identifier to appear in several files legitimately.
 
 Use the current local time, and make the timestamp inside the file agree with the one in the filename.  When those disagree, "most recent checkpoint" resolves to the wrong file, and the next session restores stale state without any sign that it did.
 
