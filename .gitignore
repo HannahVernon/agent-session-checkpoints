@@ -1,0 +1,13 @@
+# Never commit real checkpoints.  They record host names, database names,
+# ticket numbers and colleague names.  Examples in the documentation are
+# invented on purpose.
+/checkpoint-*.md
+test-output/
+sandbox/
+
+# Editor and OS noise
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store

@@ -1,0 +1,22 @@
+{
+  "name": "agent-session-checkpoints",
+  "displayName": "Session Checkpoints",
+  "description": "Write and restore session checkpoints so work survives the end of a coding session. Covers what a checkpoint must contain, how to restore one at the start of the next session, how to log changes that git diff cannot see, and the failure modes that make a checkpoint useless when you come back to it.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Hannah Vernon"
+  },
+  "homepage": "https://code.hannahvernon.com/hannah-vernon/agent-session-checkpoints",
+  "repository": "https://code.hannahvernon.com/hannah-vernon/agent-session-checkpoints",
+  "license": "MIT",
+  "keywords": [
+    "checkpoint",
+    "session-state",
+    "handoff",
+    "context",
+    "continuity",
+    "notes",
+    "workflow",
+    "agent"
+  ]
+}
