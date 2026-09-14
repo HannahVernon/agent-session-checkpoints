@@ -97,18 +97,31 @@ if (-not $target)
 
 $folder = $target.Path
 
+$now0 = Get-Date
+
 if (-not $Force)
 {
     $existing = @(Get-ChildItem -LiteralPath $folder -Filter 'checkpoint-*.md' -File -ErrorAction SilentlyContinue |
                   Sort-Object Name)
 
+    <#
+        Reuse only a checkpoint written TODAY by this session.  The rule is one
+        file per day, not one file per session: a long-lived session resumed
+        over weeks legitimately writes one file per working day, so matching on
+        the session identifier alone would append today's work to a file from
+        the day the session started.
+    #>
+    $todayStamp = $now0.ToString('yyyy-MM-dd')
+
     foreach ($candidate in $existing)
     {
+        if ($candidate.Name -notmatch "^checkpoint-$([regex]::Escape($todayStamp))T") { continue }
+
         $text = [IO.File]::ReadAllText($candidate.FullName)
 
         if ($text -match [regex]::Escape($SessionId))
         {
-            Write-Verbose "This session already has a checkpoint at $($candidate.FullName)"
+            Write-Verbose "This session already has a checkpoint for today at $($candidate.FullName)"
 
             [pscustomobject] @{
                 Path        = $candidate.FullName
@@ -123,7 +136,7 @@ if (-not $Force)
     }
 }
 
-$now      = Get-Date
+$now      = $now0
 $stamp    = $now.ToString('yyyy-MM-ddTHHmm')
 $fileName = "checkpoint-$stamp.md"
 $fullPath = Join-Path $folder $fileName
