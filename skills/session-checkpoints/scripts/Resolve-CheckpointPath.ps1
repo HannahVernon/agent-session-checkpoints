@@ -20,9 +20,8 @@
     The working directory to resolve.  Defaults to the current location.
 
 .PARAMETER StorageRoot
-    Root directory holding one folder per project.  Defaults to the
-    CHECKPOINT_STORAGE_ROOT environment variable, or ~/.agent/session-state
-    when that is not set.
+    Required explicit root directory holding one folder per project.
+    No environment variable or default is used.
 
 .PARAMETER FallbackName
     Folder name to use when Path is not inside a repository.  Use a short
@@ -32,15 +31,15 @@
     Create the folder if it does not exist.
 
 .EXAMPLE
-    Resolve-CheckpointPath.ps1
-    Resolves the current directory against the default storage root.
+    Resolve-CheckpointPath.ps1 -StorageRoot ~/agent-session-state
+    Resolves the current directory against the specified storage root.
 
 .EXAMPLE
-    Resolve-CheckpointPath.ps1 -Path C:\src\invoice-api -Create
+    Resolve-CheckpointPath.ps1 -StorageRoot ~/agent-session-state -Path ./invoice-api -Create
     Resolves and creates the folder for the invoice-api repository.
 
 .EXAMPLE
-    Resolve-CheckpointPath.ps1 -FallbackName 'dns-migration'
+    Resolve-CheckpointPath.ps1 -StorageRoot ~/agent-session-state -FallbackName 'dns-migration'
     Names the folder for the task when the directory is not a repository.
 
 .OUTPUTS
@@ -52,7 +51,8 @@ param (
     [Parameter()]
     [string] $Path = (Get-Location).Path,
 
-    [Parameter()]
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
     [string] $StorageRoot,
 
     [Parameter()]
@@ -65,17 +65,7 @@ param (
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Get-DefaultStorageRoot
-{
-    if ($env:CHECKPOINT_STORAGE_ROOT)
-    {
-        return $env:CHECKPOINT_STORAGE_ROOT
-    }
-
-    $homeDir = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
-
-    return (Join-Path $homeDir '.agent/session-state')
-}
+Import-Module (Join-Path $PSScriptRoot 'CheckpointStorage.psm1') -Force
 
 function Get-RepositoryRoot
 {
@@ -116,11 +106,6 @@ function Get-RepositoryRoot
     return $null
 }
 
-if (-not $StorageRoot)
-{
-    $StorageRoot = Get-DefaultStorageRoot
-}
-
 $repoRoot    = Get-RepositoryRoot -StartPath $Path
 $projectName = $null
 
@@ -138,18 +123,23 @@ else
     return
 }
 
-$invalid = [IO.Path]::GetInvalidFileNameChars()
-
-foreach ($badChar in $invalid)
+if ($projectName -match '[\\/]' -or $projectName -in @('.', '..'))
 {
-    $projectName = $projectName.Replace($badChar, '-')
+    throw 'The project name must be a single directory name.'
 }
 
-$folder = Join-Path $StorageRoot $projectName
+$resolved = Resolve-CheckpointStoragePath -StorageRoot $StorageRoot -RelativePath $projectName -AllowMissing
+$folder = $resolved.Path
 
-if ($Create -and -not (Test-Path -LiteralPath $folder))
+if ($resolved.Exists -and -not (Test-Path -LiteralPath $folder -PathType Container))
+{
+    throw "Project path is not a directory: $folder"
+}
+
+if ($Create -and -not $resolved.Exists)
 {
     New-Item -ItemType Directory -Path $folder -Force | Out-Null
+    $null = Resolve-CheckpointStoragePath -StorageRoot $resolved.StorageRoot -RelativePath $projectName
     Write-Verbose "Created $folder"
 }
 
@@ -157,5 +147,5 @@ if ($Create -and -not (Test-Path -LiteralPath $folder))
     ProjectName    = $projectName
     Path           = $folder
     RepositoryRoot = $repoRoot
-    Exists         = (Test-Path -LiteralPath $folder)
+    Exists         = (Test-Path -LiteralPath $folder -PathType Container)
 }
