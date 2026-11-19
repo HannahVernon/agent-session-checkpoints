@@ -11,23 +11,27 @@
     leading "Checkpoint - <timestamp>" removed when present, so the listing
     shows what a checkpoint was about rather than repeating its date.
 
-.PARAMETER Path
-    A project folder containing checkpoint files, or a storage root when used
-    with -Recurse.  Defaults to the current location.
+.PARAMETER StorageRoot
+    Required explicit checkpoint storage root.  No fallback is used.
+
+.PARAMETER RelativePath
+    Required existing checkpoint file or project directory relative to the
+    storage root.  A file selects its parent directory.  Use '.' with Recurse
+    to index the store.  Absolute paths, traversal and links are rejected.
 
 .PARAMETER Recurse
-    Treat Path as a storage root and rebuild the index in every project
+    Treat RelativePath as a storage root and rebuild the index in every project
     subfolder beneath it.
 
 .PARAMETER PassThru
     Emit the path of each index written.
 
 .EXAMPLE
-    Update-CheckpointIndex.ps1 -Path ~/.agent/session-state/invoice-api
+    Update-CheckpointIndex.ps1 -StorageRoot ~/agent-session-state -RelativePath invoice-api
     Rebuilds the index for one project.
 
 .EXAMPLE
-    Update-CheckpointIndex.ps1 -Path ~/.agent/session-state -Recurse
+    Update-CheckpointIndex.ps1 -StorageRoot ~/agent-session-state -RelativePath . -Recurse
     Rebuilds every project index in the store.
 
 .NOTES
@@ -36,8 +40,13 @@
 #>
 [CmdletBinding()]
 param (
-    [Parameter(Position = 0)]
-    [string] $Path = (Get-Location).Path,
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string] $StorageRoot,
+
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string] $RelativePath,
 
     [Parameter()]
     [switch] $Recurse,
@@ -49,17 +58,17 @@ param (
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-if (-not (Test-Path -LiteralPath $Path -PathType Container))
-{
-    throw "Folder not found: $Path"
-}
+Import-Module (Join-Path $PSScriptRoot 'CheckpointStorage.psm1') -Force
+$resolved = Resolve-CheckpointStoragePath -StorageRoot $StorageRoot -RelativePath $RelativePath
+$StorageRoot = $resolved.StorageRoot
+$selected = Get-Item -LiteralPath $resolved.Path
+$Path = if ($selected.PSIsContainer) { $selected.FullName } else { $selected.DirectoryName }
 
 $folders = @()
 
 if ($Recurse)
 {
-    $folders = @(Get-ChildItem -LiteralPath $Path -Directory |
-                 Where-Object { Get-ChildItem -LiteralPath $_.FullName -Filter 'checkpoint-*.md' -File -ErrorAction SilentlyContinue })
+    $folders = @(Get-ChildItem -LiteralPath $Path -Directory)
 }
 else
 {
@@ -74,7 +83,9 @@ if ($folders.Count -eq 0)
 
 foreach ($folder in $folders)
 {
-    $files = @(Get-ChildItem -LiteralPath $folder.FullName -Filter 'checkpoint-*.md' -File |
+    $folderRelative = $folder.FullName.Substring($StorageRoot.TrimEnd('\', '/').Length).TrimStart('\', '/')
+    if (-not $folderRelative) { $folderRelative = '.' }
+    $files = @(Get-CheckpointStorageFiles -StorageRoot $StorageRoot -RelativePath $folderRelative |
                Sort-Object Name -Descending)
 
     if ($files.Count -eq 0)
@@ -128,6 +139,8 @@ foreach ($folder in $folders)
     $null = $lines.Add('')
 
     $indexPath = Join-Path $folder.FullName 'index.md'
+    $indexRelative = if ($folderRelative -eq '.') { 'index.md' } else { Join-Path $folderRelative 'index.md' }
+    $null = Resolve-CheckpointStoragePath -StorageRoot $StorageRoot -RelativePath $indexRelative -AllowMissing
 
     [IO.File]::WriteAllText($indexPath, ($lines -join "`r`n"), (New-Object Text.UTF8Encoding $false))
 

@@ -12,8 +12,8 @@
     recorded, and only a person can tell those apart.
 
 .PARAMETER StorageRoot
-    Root directory holding one folder per project.  Defaults to the
-    CHECKPOINT_STORAGE_ROOT environment variable, or ~/.agent/session-state.
+    Required explicit root directory holding one folder per project.
+    No environment variable or default is used.
 
 .PARAMETER OlderThanDays
     Report only projects whose most recent checkpoint is at least this many
@@ -28,11 +28,11 @@
     blocked, next steps, remaining and open items.
 
 .EXAMPLE
-    Find-OpenWork.ps1
+    Find-OpenWork.ps1 -StorageRoot ~/agent-session-state
     Lists outstanding work across the whole store, oldest first.
 
 .EXAMPLE
-    Find-OpenWork.ps1 -OlderThanDays 30 -IncludeEmpty
+    Find-OpenWork.ps1 -StorageRoot ~/agent-session-state -OlderThanDays 30 -IncludeEmpty
     Finds projects untouched for a month, including quiet ones.
 
 .OUTPUTS
@@ -41,7 +41,8 @@
 #>
 [CmdletBinding()]
 param (
-    [Parameter()]
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
     [string] $StorageRoot,
 
     [Parameter()]
@@ -57,29 +58,14 @@ param (
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-if (-not $StorageRoot)
-{
-    if ($env:CHECKPOINT_STORAGE_ROOT)
-    {
-        $StorageRoot = $env:CHECKPOINT_STORAGE_ROOT
-    }
-    else
-    {
-        $homeDir     = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
-        $StorageRoot = Join-Path $homeDir '.agent/session-state'
-    }
-}
-
-if (-not (Test-Path -LiteralPath $StorageRoot -PathType Container))
-{
-    throw "Storage root not found: $StorageRoot"
-}
+Import-Module (Join-Path $PSScriptRoot 'CheckpointStorage.psm1') -Force
+$StorageRoot = (Resolve-CheckpointStoragePath -StorageRoot $StorageRoot -RelativePath '.').Path
 
 $results = New-Object System.Collections.ArrayList
 
 foreach ($folder in (Get-ChildItem -LiteralPath $StorageRoot -Directory))
 {
-    $candidates = @(Get-ChildItem -LiteralPath $folder.FullName -Filter 'checkpoint-*.md' -File -ErrorAction SilentlyContinue |
+    $candidates = @(Get-CheckpointStorageFiles -StorageRoot $StorageRoot -RelativePath $folder.Name |
                     Sort-Object Name -Descending)
 
     if ($candidates.Count -eq 0)

@@ -26,8 +26,8 @@
     location.
 
 .PARAMETER StorageRoot
-    Root directory holding one folder per project.  Defaults to the
-    CHECKPOINT_STORAGE_ROOT environment variable, or ~/.agent/session-state.
+    Required explicit root directory holding one folder per project.
+    No environment variable or default is used.
 
 .PARAMETER FallbackName
     Folder name to use when Path is not inside a repository.
@@ -41,11 +41,11 @@
     read only the newest file.
 
 .EXAMPLE
-    New-Checkpoint.ps1 -SessionId '8f2c1d40-77ab-4e19-9a3e-5c1e0b2d9f41'
+    New-Checkpoint.ps1 -StorageRoot ~/agent-session-state -SessionId '8f2c1d40-77ab-4e19-9a3e-5c1e0b2d9f41'
     Creates or reuses the checkpoint for the current repository.
 
 .EXAMPLE
-    New-Checkpoint.ps1 -SessionId $id -Title 'Invoice numbering fix'
+    New-Checkpoint.ps1 -StorageRoot ~/agent-session-state -SessionId $id -Title 'Invoice numbering fix'
     Records a title in the heading.
 
 .OUTPUTS
@@ -60,7 +60,8 @@ param (
     [Parameter()]
     [string] $Path = (Get-Location).Path,
 
-    [Parameter()]
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
     [string] $StorageRoot,
 
     [Parameter()]
@@ -83,9 +84,8 @@ if (-not (Test-Path -LiteralPath $resolver))
     throw "Resolve-CheckpointPath.ps1 not found beside this script."
 }
 
-$resolveArgs = @{ Path = $Path; Create = $true }
+$resolveArgs = @{ Path = $Path; Create = $true; StorageRoot = $StorageRoot }
 
-if ($StorageRoot)  { $resolveArgs['StorageRoot']  = $StorageRoot }
 if ($FallbackName) { $resolveArgs['FallbackName'] = $FallbackName }
 
 $target = & $resolver @resolveArgs
@@ -96,12 +96,13 @@ if (-not $target)
 }
 
 $folder = $target.Path
+Import-Module (Join-Path $PSScriptRoot 'CheckpointStorage.psm1') -Force
 
 $now0 = Get-Date
 
 if (-not $Force)
 {
-    $existing = @(Get-ChildItem -LiteralPath $folder -Filter 'checkpoint-*.md' -File -ErrorAction SilentlyContinue |
+    $existing = @(Get-CheckpointStorageFiles -StorageRoot $StorageRoot -RelativePath $target.ProjectName |
                   Sort-Object Name)
 
     <#
@@ -149,6 +150,8 @@ while (Test-Path -LiteralPath $fullPath)
     $fullPath = Join-Path $folder $fileName
     $suffix++
 }
+
+$null = Resolve-CheckpointStoragePath -StorageRoot $StorageRoot -RelativePath (Join-Path $target.ProjectName $fileName) -AllowMissing
 
 $heading = "# Checkpoint - $stamp"
 

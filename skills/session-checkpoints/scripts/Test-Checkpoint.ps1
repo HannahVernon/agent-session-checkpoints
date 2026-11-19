@@ -21,11 +21,16 @@
     have updated one file, and Low when they span several days, which is normal
     for a session resumed over time.
 
-.PARAMETER Path
-    A checkpoint file, or a folder of them.  Defaults to the current location.
+.PARAMETER StorageRoot
+    Required explicit checkpoint storage root.  No fallback is used.
+
+.PARAMETER RelativePath
+    Required existing checkpoint file or directory relative to StorageRoot.
+    Use '.' to select the whole store.  Absolute paths, traversal and links
+    are not permitted.
 
 .PARAMETER Recurse
-    When Path is a folder, check every project subfolder beneath it rather than
+    When RelativePath is a folder, check every project subfolder beneath it rather than
     that folder alone.
 
 .PARAMETER RequiredSection
@@ -35,11 +40,11 @@
     Emit findings only, with no summary line.
 
 .EXAMPLE
-    Test-Checkpoint.ps1 -Path .\checkpoint-2026-03-14T1610.md
+    Test-Checkpoint.ps1 -StorageRoot ~/agent-session-state -RelativePath invoice-api/checkpoint-2026-03-14T1610.md
     Checks one file.
 
 .EXAMPLE
-    Test-Checkpoint.ps1 -Path ~/.agent/session-state -Recurse
+    Test-Checkpoint.ps1 -StorageRoot ~/agent-session-state -RelativePath . -Recurse
     Checks an entire store and reports every finding.
 
 .NOTES
@@ -52,8 +57,13 @@
 #>
 [CmdletBinding()]
 param (
-    [Parameter(Position = 0)]
-    [string] $Path = (Get-Location).Path,
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string] $StorageRoot,
+
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string] $RelativePath,
 
     [Parameter()]
     [switch] $Recurse,
@@ -76,10 +86,10 @@ param (
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-if (-not (Test-Path -LiteralPath $Path))
-{
-    throw "Path not found: $Path"
-}
+Import-Module (Join-Path $PSScriptRoot 'CheckpointStorage.psm1') -Force
+$resolved = Resolve-CheckpointStoragePath -StorageRoot $StorageRoot -RelativePath $RelativePath
+$StorageRoot = $resolved.StorageRoot
+$Path = $resolved.Path
 
 $item    = Get-Item -LiteralPath $Path
 $targets = @()
@@ -89,19 +99,14 @@ if ($item.PSIsContainer)
 {
     $inStore = $true
 
-    $targets = @(if ($Recurse)
-    {
-        Get-ChildItem -LiteralPath $Path -Filter 'checkpoint-*.md' -File -Recurse
-    }
-    else
-    {
-        Get-ChildItem -LiteralPath $Path -Filter 'checkpoint-*.md' -File
-    })
+    $targets = @(Get-CheckpointStorageFiles -StorageRoot $StorageRoot -RelativePath $RelativePath -Recurse:$Recurse)
 }
 else
 {
     $targets  = @($item)
-    $siblings = @(Get-ChildItem -LiteralPath $item.DirectoryName -Filter 'checkpoint-*.md' -File -ErrorAction SilentlyContinue)
+    $siblingPath = $item.DirectoryName.Substring($StorageRoot.TrimEnd('\', '/').Length).TrimStart('\', '/')
+    if (-not $siblingPath) { $siblingPath = '.' }
+    $siblings = @(Get-CheckpointStorageFiles -StorageRoot $StorageRoot -RelativePath $siblingPath)
     $inStore  = ($siblings.Count -gt 1)
 }
 
@@ -117,7 +122,10 @@ if ($inStore)
 {
     $scanRoot = if ($item.PSIsContainer) { $Path } else { $item.DirectoryName }
 
-    foreach ($scan in @(Get-ChildItem -LiteralPath $scanRoot -Filter 'checkpoint-*.md' -File -Recurse -ErrorAction SilentlyContinue))
+    $scanRelative = $scanRoot.Substring($StorageRoot.TrimEnd('\', '/').Length).TrimStart('\', '/')
+    if (-not $scanRelative) { $scanRelative = '.' }
+
+    foreach ($scan in @(Get-CheckpointStorageFiles -StorageRoot $StorageRoot -RelativePath $scanRelative -Recurse:$Recurse))
     {
         $scanText = [IO.File]::ReadAllText($scan.FullName)
 

@@ -5,8 +5,8 @@
 .DESCRIPTION
     Runs the checks the AGENT-README commits to:
 
-      Parse       every .ps1 parses with the PowerShell parser
-      Help        every .ps1 has comment-based help with a .SYNOPSIS
+      Parse       every .ps1 and .psm1 parses with the PowerShell parser
+      Help        every .ps1 and .psm1 has comment-based help with a .SYNOPSIS
       Dashes      no em-dashes, en-dashes, or hyphen lookalikes in any text file
       Manifests   plugin.json and .claude-plugin/plugin.json agree on name,
                   version, description and license
@@ -54,8 +54,8 @@ function Add-Finding
     })
 }
 
-$scripts = @(Get-ChildItem -LiteralPath $Path -Filter '*.ps1' -File -Recurse |
-             Where-Object { $_.FullName -notmatch '[\\/]\.git[\\/]' })
+$scripts = @(Get-ChildItem -LiteralPath $Path -File -Recurse |
+             Where-Object { $_.Extension -in @('.ps1', '.psm1') -and $_.FullName -notmatch '[\\/]\.git[\\/]' })
 
 foreach ($script in $scripts)
 {
@@ -89,7 +89,7 @@ foreach ($script in $scripts)
 $textFiles = @(Get-ChildItem -LiteralPath $Path -File -Recurse |
                Where-Object {
                    $_.FullName -notmatch '[\\/]\.git[\\/]' -and
-                   $_.Extension -in @('.md', '.ps1', '.json', '.txt', '.yml', '.yaml', '.gitattributes', '')
+                   $_.Extension -in @('.md', '.ps1', '.psm1', '.json', '.txt', '.yml', '.yaml', '.gitattributes', '')
                })
 
 $dashMap = @{
