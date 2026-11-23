@@ -2,6 +2,8 @@
 
 A skill that teaches an AI coding agent to write a durable record of a working session, and to restore it at the start of the next one.
 
+Current version: 1.0.3.
+
 An agent session ends and its context is gone.  What was tried and rejected, what was decided and why, which systems were touched outside version control, and what the next step was going to be all go with it.  A commit log does not capture any of that.
 
 This repository packages the convention, the rules that keep it useful, five optional skill helper scripts, and a reusable Git synchronisation tool.
