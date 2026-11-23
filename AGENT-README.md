@@ -2,8 +2,8 @@
 Agent-Readme: 0.1
 Name: agent-session-checkpoints
 Description: A skill package that teaches an agent to write and restore session checkpoints.
-Version: 1.0.2
-Updated: 2026-09-14
+Version: 1.0.3
+Updated: 2026-11-23
 Tags: checkpoint, session-state, handoff, continuity, workflow
 Languages: markdown, powershell
 Homepage: https://github.com/HannahVernon/agent-session-checkpoints
@@ -69,7 +69,7 @@ Preferences (negotiable):
 
 ## Current state
 
-Version 1.0.2.  The skill is complete and self-consistent.
+Version 1.0.3.  The skill is complete and self-consistent.
 
 The convention it documents is stable in practice, having been used across dozens of projects, but the packaging is new and the helper scripts have less mileage than the written rules.  Treat the documents as settled and the scripts as the part most likely to need fixing.
 
@@ -120,6 +120,7 @@ No MCP servers, no context endpoints, no external services are required by the p
 
 - 2026-09-14: 1.0.2.  New-Checkpoint.ps1 now reuses only a file written today, matching the one-file-per-day rule 1.0.1 introduced in the documentation.
 - 2026-11-23: Added the canonical concurrent-writer checkpoint synchronisation tool and its disposable Git regression suite.
+- 2026-11-23: 1.0.3.  Released the canonical concurrent-writer synchronisation tooling through the plugin package.
 - 2026-09-09: Recorded that the push mirror does not propagate branch deletions.
 - 2026-09-09: 1.0.1.  Fixed an EmptySection false positive, graded DuplicateSession by whether the files share a date, and changed the file-per-session rule to file-per-day.
 - 2026-09-09: Recorded the mirror token's permission constraint for GitHub Actions workflows.
