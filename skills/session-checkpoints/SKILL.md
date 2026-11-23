@@ -132,7 +132,7 @@ Run any of them with `-?` for usage.  If PowerShell is not available, apply the 
 ./scripts/Find-OpenWork.ps1 -StorageRoot ~/agent-session-state
 ```
 
-Git synchronisation belongs in the agent or operator integration, not in this portable skill.  A Git wrapper must verify that the store belongs to the selected repository, limit commits to explicitly selected checkpoint files, preserve unrelated work and verify the remote result.  A local save and a successful remote sync are separate outcomes.
+Git synchronisation belongs in the agent or operator integration, not in the portable skill rules.  The repository provides `tools/Sync-Checkpoint.ps1` as the canonical reference implementation for PowerShell integrations.  A Git wrapper must verify that the store belongs to the selected repository, limit commits to explicitly selected checkpoint files, preserve unrelated work and verify the remote result.  Integrations that share one checkpoint repository must also coordinate concurrent writers: serialize processes in one checkout, fast-forward disjoint checkpoint commits, refuse same-file changes, and retry at most one disjoint push race.  A local save and a successful remote sync are separate outcomes.
 
 ## Reference files
 
